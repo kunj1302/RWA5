@@ -109,15 +109,14 @@ private:
      */
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr next_waypoint_publisher_;                     
 
-    // /**
-    //  * @brief ROS 2 publisher for velocity commands.
-    //  *
-    //  * Publishes `geometry_msgs::msg::Twist` messages to control the robot's linear
-    //  * and angular velocities.
-    //  */
-    // rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_publisher_;    
+    /**
+     * @brief ROS 2 publisher for velocity commands.
+     *
+     * Publishes `geometry_msgs::msg::Twist` messages to control the robot's linear
+     * and angular velocities.
+     */
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_publisher_;    
 
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_publisher_;
 
     /**
      * @brief Timer for executing the control loop periodically.
