@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(bot_waypoint_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
 
 # Include directories for custom message
@@ -24,7 +25,7 @@ target_link_libraries(waypoint
 )
 
 # Set target dependencies (CMake will manage message header files)
-ament_target_dependencies(waypoint rclcpp bot_waypoint_msgs nav_msgs)
+ament_target_dependencies(waypoint rclcpp bot_waypoint_msgs nav_msgs tf2_geometry_msgs)
 
 # Install the executable
 install(TARGETS waypoint DESTINATION lib/${PROJECT_NAME})
