@@ -31,7 +31,7 @@ void WaypointReacher::waypointCallback(const bot_waypoint_msgs::msg::BotWaypoint
 // Proportional controller to guide the robot to the waypoint
 void WaypointReacher::controlLoop()
 {
-    if (is_waypoint_reached_ || waypoint_reached_count_ >= 3)
+    if (is_waypoint_reached_ || waypoint_reached_count_ > 3)
     {
         return;
     }
@@ -52,7 +52,7 @@ void WaypointReacher::controlLoop()
 
     double error_x = current_waypoint_.waypoint.x - current_x;
     double error_y = current_waypoint_.waypoint.y - current_y;
-
+    std::cout<<current_waypoint_.waypoint.x<<" "<<current_x<<"\n";
     // Calculate distance and angle to the target waypoint
     double distance_to_waypoint = std::sqrt(error_x * error_x + error_y * error_y);
     double target_angle = std::atan2(error_y, error_x);
@@ -65,15 +65,15 @@ void WaypointReacher::controlLoop()
     geometry_msgs::msg::Twist velocity_command;
 
     // Control logic: move towards the waypoint if it's not reached
-    std::cout<<"TOLERANCE -----------------------"<<current_waypoint_.tolerance<<"\n";
-    if (distance_to_waypoint > (current_waypoint_.tolerance/10))
+    // std::cout<<"TOLERANCE -----------------------"<<current_waypoint_.tolerance<<"\n";
+    if (distance_to_waypoint > 0.1)
     {
         // Set linear and angular velocity to move towards waypoint
         velocity_command.linear.x = std::min(k_p_linear * distance_to_waypoint, 0.5); // Limiting linear speed for more realistic movement
         velocity_command.angular.z = k_p_angular * angle_error;
 
-        RCLCPP_INFO(this->get_logger(), "Moving towards waypoint: current position x=%f, y=%f, theta=%f", current_x, current_y, current_theta);
-        RCLCPP_INFO(this->get_logger(), "Distance to waypoint: %f, Target angle error: %f", distance_to_waypoint, angle_error);
+        // RCLCPP_INFO(this->get_logger(), "Moving towards waypoint: current position x=%f, y=%f, theta=%f", current_x, current_y, current_theta);
+        // RCLCPP_INFO(this->get_logger(), "Distance to waypoint: %f, Target angle error: %f", distance_to_waypoint, angle_error);
     }
     else
     {
@@ -83,7 +83,7 @@ void WaypointReacher::controlLoop()
         if (std::abs(theta_error) > 0.05)  // Allow small threshold for angle error
         {
             velocity_command.angular.z = k_p_angular * theta_error;  // Rotate to align with target angle
-            RCLCPP_INFO(this->get_logger(), "Rotating to target theta: current theta=%f, Target theta=%f, Angle error=%f", current_theta, current_waypoint_.waypoint.theta, theta_error);
+            // RCLCPP_INFO(this->get_logger(), "Rotating to target theta: current theta=%f, Target theta=%f, Angle error=%f", current_theta, current_waypoint_.waypoint.theta, theta_error);
         }
         else
         {

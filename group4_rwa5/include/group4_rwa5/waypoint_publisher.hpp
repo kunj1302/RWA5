@@ -20,6 +20,6 @@ private:
 
     rclcpp::Publisher<bot_waypoint_msgs::msg::BotWaypoint>::SharedPtr publisher_;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr subscription_;
-    std::array<bot_waypoint_msgs::msg::BotWaypoint, 3> waypoints_;
+    std::array<bot_waypoint_msgs::msg::BotWaypoint, 4> waypoints_;
     unsigned int index_;  // Index to keep track of the current waypoint
 };
