@@ -57,7 +57,7 @@ void WaypointReacher::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 }
 
 void WaypointReacher::controlLoop() {
-    if (is_waypoint_reached_ || waypoint_reached_count_ >= 3) {
+    if (is_waypoint_reached_ || waypoint_reached_count_ >= 4) {
         return;
     }
 

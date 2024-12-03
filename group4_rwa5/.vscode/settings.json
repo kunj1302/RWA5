@@ -1,0 +1,21 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/manas/catkin_ws/src/sumo/tools",
+        "/home/manas/ros2_ws/install/bot_waypoint_msgs/lib/python3.8/site-packages",
+        "/opt/ros/galactic/lib/python3.8/site-packages",
+        "/home/manas/catkin_ws/src/sumo/tools",
+        "/home/manas/catkin_ws/src/sumo/tools",
+        ""
+    ],
+    "python.analysis.extraPaths": [
+        "/home/manas/catkin_ws/src/sumo/tools",
+        "/home/manas/ros2_ws/install/bot_waypoint_msgs/lib/python3.8/site-packages",
+        "/opt/ros/galactic/lib/python3.8/site-packages",
+        "/home/manas/catkin_ws/src/sumo/tools",
+        "/home/manas/catkin_ws/src/sumo/tools",
+        ""
+    ],
+    "files.associations": {
+        "plyconfig.json": "jsonc"
+    }
+}

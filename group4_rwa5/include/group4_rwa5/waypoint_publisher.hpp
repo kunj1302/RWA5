@@ -19,6 +19,6 @@ private:
     rclcpp::Publisher<bot_waypoint_msgs::msg::BotWaypoint>::SharedPtr waypoint_publisher_;
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr next_waypoint_subscription_;
 
-    std::array<bot_waypoint_msgs::msg::BotWaypoint, 3> waypoints_; // Array of waypoints
+    std::array<bot_waypoint_msgs::msg::BotWaypoint, 4> waypoints_; // Array of waypoints
     unsigned int current_index_{0}; // Index to keep track of the current waypoint
 };

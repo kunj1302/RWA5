@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/manas/ros2_ws/install/odometry/include/**",
+        "/home/manas/ros2_ws/install/bot_waypoint_msgs/include/**",
+        "/opt/ros/galactic/include/**",
+        "/home/manas/ros2_ws/src/RWA5/group4_rwa5/include/**",
+        "/home/manas/ros2_ws/src/odometry/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
