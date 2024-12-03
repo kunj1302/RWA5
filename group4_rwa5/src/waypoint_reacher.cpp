@@ -18,9 +18,6 @@ void WaypointReacher::waypointCallback(const bot_waypoint_msgs::msg::BotWaypoint
     case bot_waypoint_msgs::msg::BotWaypoint::LARGE:
         allowable_tolerance_ = 0.3;  // 0.3 meters for LARGE
         break;
-    default:
-        allowable_tolerance_ = 0.1;  // Default to SMALL if unknown
-        break;
     }
 
     is_waypoint_reached_ = false;  // Reset the flag since a new waypoint has been received
@@ -35,6 +32,8 @@ void WaypointReacher::controlLoop()
     {
         return;
     }
+
+
 
     // Time calculation to determine elapsed time between control loop executions
     auto current_time = std::chrono::steady_clock::now();
@@ -59,7 +58,7 @@ void WaypointReacher::controlLoop()
     double angle_error = target_angle - current_theta;
 
     // Proportional control gains
-    double k_p_linear = 0.3;  // Lowered gains for smoother, more realistic movement
+    double k_p_linear = 0.3; 
     double k_p_angular = 1.0;
 
     geometry_msgs::msg::Twist velocity_command;

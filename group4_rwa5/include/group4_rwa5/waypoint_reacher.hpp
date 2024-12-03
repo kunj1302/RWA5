@@ -44,6 +44,7 @@ private:
 
     bot_waypoint_msgs::msg::BotWaypoint current_waypoint_;
     int waypoint_reached_count_{0};  // Count of how many waypoints have been reached
-    bool is_waypoint_reached_{false};    // Flag to ensure waypoint is published once
-    std::chrono::steady_clock::time_point previous_time_{};
+    bool is_waypoint_reached_{false};
+    float allowable_tolerance_{0};  
+    std::chrono::steady_clock::time_point previous_time_;
 };
