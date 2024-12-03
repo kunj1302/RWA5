@@ -33,6 +33,8 @@ void WaypointReacher::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     tf2::Quaternion quaternion;
     tf2::fromMsg(msg->pose.pose.orientation, quaternion);
     tf2::Matrix3x3(quaternion).getRPY(roll_, pitch_, current_theta_);
+    RCLCPP_INFO(this->get_logger(), "Current position: x=%f, y=%f, theta=%f",
+                current_x_, current_y_, current_theta_);
 }
 
 void WaypointReacher::controlLoop() {
