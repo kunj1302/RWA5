@@ -4,47 +4,40 @@
 #include "bot_waypoint_msgs/msg/bot_waypoint.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include <cmath>
-#include <chrono>
 
-class WaypointReacher : public rclcpp::Node
-{
+class WaypointReacher : public rclcpp::Node {
 public:
-    // Constructor
-    WaypointReacher()
-    : Node("waypoint_reacher"), waypoint_reached_count_(0), is_waypoint_reached_(false)
-    {
-        // Subscriber for /bot_waypoint to receive the current target waypoint
-        waypoint_subscription_ = this->create_subscription<bot_waypoint_msgs::msg::BotWaypoint>(
-            "/bot_waypoint", 10, std::bind(&WaypointReacher::waypointCallback, this, std::placeholders::_1));
-
-        // Publisher for /next_waypoint to signal when a waypoint is reached
-        next_waypoint_publisher_ = this->create_publisher<std_msgs::msg::Bool>("/next_waypoint", 10);
-
-        // Publisher for /cmd_vel to control TurtleBot movement
-        velocity_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
-
-        // Timer to control the robot towards the waypoint at fixed intervals
-        controller_timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(100),
-            std::bind(&WaypointReacher::controlLoop, this));
-    }
+    WaypointReacher();
 
 private:
-    // Callback when a waypoint is received
+    // Callback to process received waypoint messages
     void waypointCallback(const bot_waypoint_msgs::msg::BotWaypoint::SharedPtr msg);
 
-    // Proportional controller to guide the robot to the waypoint
+    // Odometry callback to update the robot's position and orientation
+    void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
+
+    // Control loop to guide the robot to the waypoint
     void controlLoop();
 
+    // Publish velocity commands
+    void publishVelocity(double linear, double angular);
+
+    // Normalize angles to the range [-π, π]
+    double normalizeAngle(double angle);
+
     rclcpp::Subscription<bot_waypoint_msgs::msg::BotWaypoint>::SharedPtr waypoint_subscription_;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_subscription_;
     rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr next_waypoint_publisher_;
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_publisher_;
     rclcpp::TimerBase::SharedPtr controller_timer_;
 
     bot_waypoint_msgs::msg::BotWaypoint current_waypoint_;
-    int waypoint_reached_count_{0};  // Count of how many waypoints have been reached
+    int waypoint_reached_count_{0};
     bool is_waypoint_reached_{false};
-    float allowable_tolerance_{0};  
-    std::chrono::steady_clock::time_point previous_time_;
+    double allowable_tolerance_{0.1}; // Dynamic tolerance based on waypoint tolerance
+    double current_x_{0.0}, current_y_{0.0}, current_theta_{0.0};
+    double roll_{0.0}, pitch_{0.0};
 };
