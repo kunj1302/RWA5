@@ -1,39 +1,60 @@
 #include "waypoint_publisher.hpp"
 
+// Constructor
+WaypointPublisher::WaypointPublisher()
+    : Node("waypoint_publisher"), index_(0)
+{
+    // Initialize the waypoints
+    waypoints_[0].waypoint.x = 4.0;
+    waypoints_[0].waypoint.y = 4.0;
+    waypoints_[0].waypoint.theta = 1.57;
+    waypoints_[0].tolerance = bot_waypoint_msgs::msg::BotWaypoint::SMALL;
+
+    waypoints_[1].waypoint.x = 4.0;
+    waypoints_[1].waypoint.y = -4.0;
+    waypoints_[1].waypoint.theta = 3.14;
+    waypoints_[1].tolerance = bot_waypoint_msgs::msg::BotWaypoint::MEDIUM;
+
+    waypoints_[2].waypoint.x = -4.0;
+    waypoints_[2].waypoint.y = 4.0;
+    waypoints_[2].waypoint.theta = -3.14;
+    waypoints_[2].tolerance = bot_waypoint_msgs::msg::BotWaypoint::LARGE;
+
+    // Publisher setup for the waypoint topic
+    publisher_ = this->create_publisher<bot_waypoint_msgs::msg::BotWaypoint>("/bot_waypoint", 10);
+
+    // Subscriber setup for the next_waypoint topic
+    subscription_ = this->create_subscription<std_msgs::msg::Bool>(
+        "/next_waypoint", 10, std::bind(&WaypointPublisher::nextWaypointCallback, this, std::placeholders::_1));
+
+    // Publish the first waypoint immediately
+    publishWaypoint();
+}
+
 // Method to publish the waypoint
 void WaypointPublisher::publishWaypoint()
 {
-    if (index_ < waypoints_.size())  // Ensure index is within bounds
+    if (index_ < waypoints_.size())
     {
-        current_waypoint_ = waypoints_[index_];  // Get the current waypoint
-        publisher_->publish(current_waypoint_);
-        is_published_ = true;  // Set the flag to indicate the waypoint is published
-        RCLCPP_INFO(this->get_logger(), "Published waypoint %d: x=%f, y=%f, theta=%f",
-                    index_, current_waypoint_.waypoint.x, current_waypoint_.waypoint.y, current_waypoint_.waypoint.theta);
-    }
-    else
-    {
-        RCLCPP_INFO(this->get_logger(), "All waypoints have been published.");
+        RCLCPP_INFO(this->get_logger(), "Publishing waypoint %d: x=%f, y=%f, theta=%f", index_,
+                    waypoints_[index_].waypoint.x, waypoints_[index_].waypoint.y, waypoints_[index_].waypoint.theta);
+        publisher_->publish(waypoints_[index_]);
     }
 }
 
 // Callback function when the next_waypoint signal is received
-void WaypointPublisher::onNextWaypointReceived(const std_msgs::msg::Bool::SharedPtr msg)
+void WaypointPublisher::nextWaypointCallback(const std_msgs::msg::Bool::SharedPtr msg)
 {
-    if (msg->data && is_published_)
+    if (msg->data)
     {
-        // Move to the next waypoint
         index_++;
-        is_published_ = false;  // Reset the flag to allow the next waypoint to be published
-
-        // Publish the next waypoint if available
         if (index_ < waypoints_.size())
         {
             publishWaypoint();
         }
         else
         {
-            RCLCPP_INFO(this->get_logger(), "All waypoints reached, no more waypoints to publish.");
+            RCLCPP_INFO(this->get_logger(), "All waypoints have been published.");
         }
     }
 }

@@ -1,46 +1,62 @@
 #include "waypoint_reacher.hpp"
-#include <cmath>
 
+// Constructor
+WaypointReacher::WaypointReacher()
+    : Node("waypoint_reacher"), waypoint_reached_count_(0), is_waypoint_reached_(false)
+{
+    // Subscriber for /bot_waypoint to receive the current target waypoint
+    waypoint_subscription_ = this->create_subscription<bot_waypoint_msgs::msg::BotWaypoint>(
+        "/bot_waypoint", 10, std::bind(&WaypointReacher::waypointCallback, this, std::placeholders::_1));
+
+    // Publisher for /next_waypoint to signal when a waypoint is reached
+    next_waypoint_publisher_ = this->create_publisher<std_msgs::msg::Bool>("/next_waypoint", 10);
+
+    // Publisher for /cmd_vel to control TurtleBot movement
+    velocity_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+
+    // Timer to control the robot towards the waypoint at fixed intervals
+    controller_timer_ = this->create_wall_timer(
+        std::chrono::milliseconds(100),
+        std::bind(&WaypointReacher::controlLoop, this));
+}
 
 // Callback when a waypoint is received
 void WaypointReacher::waypointCallback(const bot_waypoint_msgs::msg::BotWaypoint::SharedPtr msg)
 {
     current_waypoint_ = *msg;
-    waypoint_received_ = true;
     is_waypoint_reached_ = false;  // Reset the flag since a new waypoint has been received
     RCLCPP_INFO(this->get_logger(), "Received new waypoint: x=%f, y=%f, theta=%f", msg->waypoint.x, msg->waypoint.y, msg->waypoint.theta);
-}
-
-// Callback when odometry data is received
-void WaypointReacher::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
-{
-    current_x_ = msg->pose.pose.position.x;
-    current_y_ = msg->pose.pose.position.y;
-
-    // Extracting the orientation (theta) from the quaternion
-    double siny_cosp = 2.0 * (msg->pose.pose.orientation.w * msg->pose.pose.orientation.z + msg->pose.pose.orientation.x * msg->pose.pose.orientation.y);
-    double cosy_cosp = 1.0 - 2.0 * (msg->pose.pose.orientation.y * msg->pose.pose.orientation.y + msg->pose.pose.orientation.z * msg->pose.pose.orientation.z);
-    current_theta_ = std::atan2(siny_cosp, cosy_cosp);
-
-    // Debug log for current position and orientation
-    RCLCPP_DEBUG(this->get_logger(), "Current position: x=%f, y=%f, theta=%f", current_x_, current_y_, current_theta_);
 }
 
 // Proportional controller to guide the robot to the waypoint
 void WaypointReacher::controlLoop()
 {
-    if (!waypoint_received_ || is_waypoint_reached_ || waypoint_reached_count_ >= 3)
+    if (is_waypoint_reached_ || waypoint_reached_count_ >= 3)
     {
         return;
     }
 
-    double error_x = current_waypoint_.waypoint.x - current_x_;
-    double error_y = current_waypoint_.waypoint.y - current_y_;
+    // Time calculation to determine elapsed time between control loop executions
+    auto current_time = std::chrono::steady_clock::now();
+    double dt = 0.1;  // Default value for the first run
+    if (previous_time_.time_since_epoch().count() != 0)
+    {
+        dt = std::chrono::duration<double>(current_time - previous_time_).count();
+    }
+    previous_time_ = current_time;
+
+    // Assume we have the robot's current position (for simulation purposes, starting at origin)
+    static double current_x = 0.0;
+    static double current_y = 0.0;
+    static double current_theta = 0.0;
+
+    double error_x = current_waypoint_.waypoint.x - current_x;
+    double error_y = current_waypoint_.waypoint.y - current_y;
 
     // Calculate distance and angle to the target waypoint
     double distance_to_waypoint = std::sqrt(error_x * error_x + error_y * error_y);
     double target_angle = std::atan2(error_y, error_x);
-    double angle_error = target_angle - current_theta_;
+    double angle_error = target_angle - current_theta;
 
     // Proportional control gains
     double k_p_linear = 0.5;
@@ -49,24 +65,25 @@ void WaypointReacher::controlLoop()
     geometry_msgs::msg::Twist velocity_command;
 
     // Control logic: move towards the waypoint if it's not reached
-    if (distance_to_waypoint > current_waypoint_.tolerance)
+    std::cout<<"TOLERANCE -----------------------"<<current_waypoint_.tolerance<<"\n";
+    if (distance_to_waypoint > (current_waypoint_.tolerance/10))
     {
         // Set linear and angular velocity to move towards waypoint
-        velocity_command.linear.x = k_p_linear * distance_to_waypoint;
+        velocity_command.linear.x = std::min(k_p_linear * distance_to_waypoint, 0.5); // Limiting linear speed for more realistic movement
         velocity_command.angular.z = k_p_angular * angle_error;
 
-        RCLCPP_INFO(this->get_logger(), "Moving towards waypoint: x=%f, y=%f, theta=%f", current_x_, current_y_, current_theta_);
+        RCLCPP_INFO(this->get_logger(), "Moving towards waypoint: current position x=%f, y=%f, theta=%f", current_x, current_y, current_theta);
         RCLCPP_INFO(this->get_logger(), "Distance to waypoint: %f, Target angle error: %f", distance_to_waypoint, angle_error);
     }
     else
     {
-        // At waypoint, now rotate to the desired theta
-        double theta_error = current_waypoint_.waypoint.theta - current_theta_;
+        // Waypoint reached, now rotate to the desired theta
+        double theta_error = current_waypoint_.waypoint.theta - current_theta;
 
         if (std::abs(theta_error) > 0.05)  // Allow small threshold for angle error
         {
             velocity_command.angular.z = k_p_angular * theta_error;  // Rotate to align with target angle
-            RCLCPP_INFO(this->get_logger(), "Rotating to target theta: theta=%f, Current angle error: %f", current_theta_, theta_error);
+            RCLCPP_INFO(this->get_logger(), "Rotating to target theta: current theta=%f, Target theta=%f, Angle error=%f", current_theta, current_waypoint_.waypoint.theta, theta_error);
         }
         else
         {
@@ -78,7 +95,6 @@ void WaypointReacher::controlLoop()
                 next_waypoint_publisher_->publish(msg);
                 waypoint_reached_count_++;
                 is_waypoint_reached_ = true;
-                waypoint_received_ = false;  // Reset to wait for next waypoint
 
                 // Stop the robot by setting all velocities to zero
                 velocity_command.linear.x = 0.0;
@@ -91,8 +107,15 @@ void WaypointReacher::controlLoop()
 
     // Publish the velocity command to control the robot
     velocity_publisher_->publish(velocity_command);
-    std::cout<<"Possibel\n";
 
-    // Debug log for current position and command
-    RCLCPP_DEBUG(this->get_logger(), "Velocity command: linear_x=%f, angular_z=%f", velocity_command.linear.x, velocity_command.angular.z);
+    // Simulate updating the robot's current position (for illustration purposes)
+    current_x += velocity_command.linear.x * dt * cos(current_theta);    // Update position based on velocity
+    current_y += velocity_command.linear.x * dt * sin(current_theta);    // Update position based on velocity
+    current_theta += velocity_command.angular.z * dt;                    // Update angle based on angular velocity
+
+    // Ensure theta remains in the range -π to π for better error handling
+    if (current_theta > M_PI)
+        current_theta -= 2 * M_PI;
+    if (current_theta < -M_PI)
+        current_theta += 2 * M_PI;
 }
