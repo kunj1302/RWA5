@@ -5,7 +5,7 @@
 #include "std_msgs/msg/bool.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include <cmath>
 
 
@@ -117,6 +117,7 @@ private:
     //  */
     // rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_publisher_;    
 
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr velocity_publisher_;
 
     /**
      * @brief Timer for executing the control loop periodically.
