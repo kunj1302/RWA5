@@ -4,6 +4,8 @@
 #include "bot_waypoint_msgs/msg/bot_waypoint.hpp"
 #include <array>
 #include <std_msgs/msg/bool.hpp>
+#include "nav_msgs/msg/odometry.hpp"
+
 
 class WaypointPublisher : public rclcpp::Node
 {
@@ -23,15 +25,15 @@ public:
         waypoints_[1].waypoint.theta = 1.57;
         waypoints_[1].tolerance = bot_waypoint_msgs::msg::BotWaypoint::SMALL;
 
-        waypoints_[2].waypoint.x = 4.0;
-        waypoints_[2].waypoint.y = -4.0;
-        waypoints_[2].waypoint.theta = 3.14;
-        waypoints_[2].tolerance = bot_waypoint_msgs::msg::BotWaypoint::MEDIUM;
+        // waypoints_[2].waypoint.x = 4.0;
+        // waypoints_[2].waypoint.y = -4.0;
+        // waypoints_[2].waypoint.theta = 3.14;
+        // waypoints_[2].tolerance = bot_waypoint_msgs::msg::BotWaypoint::MEDIUM;
 
-        waypoints_[3].waypoint.x = -4.0;
-        waypoints_[3].waypoint.y = 4.0;
-        waypoints_[3].waypoint.theta = -3.14;
-        waypoints_[3].tolerance = bot_waypoint_msgs::msg::BotWaypoint::LARGE;
+        // waypoints_[3].waypoint.x = -4.0;
+        // waypoints_[3].waypoint.y = 4.0;
+        // waypoints_[3].waypoint.theta = -3.14;
+        // waypoints_[3].tolerance = bot_waypoint_msgs::msg::BotWaypoint::LARGE;
 
         // Publisher setup for the waypoint topic
         publisher_ = this->create_publisher<bot_waypoint_msgs::msg::BotWaypoint>("/bot_waypoint", 10);
