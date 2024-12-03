@@ -13,18 +13,18 @@ public:
         : Node("waypoint_publisher"), index_(0), is_published_(false)
     {
         // Initialize the waypoints with uniform initialization
-        // bot_status_msg_ = bot_waypoint_msgs::msg::BotWaypoint();
-        // waypoints_[0].waypoint.x = 4.0;
-        // waypoints_[0].waypoint.y = 4.0;
-        // waypoints_[0].waypoint.theta = 1.57;
-        // waypoints_[0].tolerance = bot_waypoint_msgs::msg::BotWaypoint::SMALL;
+        bot_status_msg_ = bot_waypoint_msgs::msg::BotWaypoint();
+        waypoints_[0].waypoint.x = 4.0;
+        waypoints_[0].waypoint.y = 4.0;
+        waypoints_[0].waypoint.theta = 1.57;
+        waypoints_[0].tolerance = bot_waypoint_msgs::msg::BotWaypoint::SMALL;
 
         // Publisher setup for the waypoint topic
-        publisher_ = this->create_publisher<bot_waypoint_msgs::msg::BotWaypoint>("waypoints", 10);
+        publisher_ = this->create_publisher<bot_waypoint_msgs::msg::BotWaypoint>("/bot_waypoint", 10);
 
         // Subscriber setup for the next_waypoint topic
         subscription_ = this->create_subscription<std_msgs::msg::Bool>(
-            "next_waypoint", 10, std::bind(&WaypointPublisher::nextWaypointCallback, this, std::placeholders::_1));
+            "/next_waypoint", 10, std::bind(&WaypointPublisher::nextWaypointCallback, this, std::placeholders::_1));
 
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(500),
