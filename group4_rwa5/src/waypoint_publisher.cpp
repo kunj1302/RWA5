@@ -32,8 +32,6 @@ WaypointPublisher::WaypointPublisher()
     subscription_ = this->create_subscription<std_msgs::msg::Bool>(
         "/next_waypoint", 10, std::bind(&WaypointPublisher::nextWaypointCallback, this, std::placeholders::_1));
 
-    // Publish the first waypoint immediately
-    ;
 }
 
 // Method to publish the waypoint
