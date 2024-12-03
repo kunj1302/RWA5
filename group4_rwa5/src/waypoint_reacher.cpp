@@ -1,30 +1,9 @@
 #include "waypoint_reacher.hpp"
 
-WaypointReacher::WaypointReacher()
-    : Node("waypoint_reacher"), waypoint_reached_count_(0), is_waypoint_reached_(false) {
-    // Subscriber for waypoints
-    waypoint_subscription_ = this->create_subscription<bot_waypoint_msgs::msg::BotWaypoint>(
-        "/bot_waypoint", 10, std::bind(&WaypointReacher::waypointCallback, this, std::placeholders::_1));
-
-    // Subscriber for odometry data
-    odom_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
-        "/odom", 10, std::bind(&WaypointReacher::odomCallback, this, std::placeholders::_1));
-
-    // Publisher for signaling next waypoint
-    next_waypoint_publisher_ = this->create_publisher<std_msgs::msg::Bool>("/next_waypoint", 10);
-
-    // Publisher for velocity commands
-    velocity_publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
-
-    // Timer for control loop
-    controller_timer_ = this->create_wall_timer(
-        std::chrono::milliseconds(100), std::bind(&WaypointReacher::controlLoop, this));
-}
-
 void WaypointReacher::waypointCallback(const bot_waypoint_msgs::msg::BotWaypoint::SharedPtr msg) {
     current_waypoint_ = *msg;
 
-    // Map tolerance values to numerical thresholds
+    // Map tolerance values 
     switch (current_waypoint_.tolerance) {
     case bot_waypoint_msgs::msg::BotWaypoint::SMALL:
         allowable_tolerance_ = 0.1; // 0.1 meters
@@ -37,7 +16,7 @@ void WaypointReacher::waypointCallback(const bot_waypoint_msgs::msg::BotWaypoint
         break;
     default:
         RCLCPP_WARN(this->get_logger(), "Unknown tolerance value. Defaulting to 0.1 meters.");
-        allowable_tolerance_ = 0.1; // Fallback value
+        allowable_tolerance_ = 0.1; // default value
         break;
     }
 
@@ -47,7 +26,7 @@ void WaypointReacher::waypointCallback(const bot_waypoint_msgs::msg::BotWaypoint
 }
 
 void WaypointReacher::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
-    // Update current position and orientation from odometry
+    // Update current position and orientation from odom
     current_x_ = msg->pose.pose.position.x;
     current_y_ = msg->pose.pose.position.y;
 
@@ -58,6 +37,8 @@ void WaypointReacher::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 
 void WaypointReacher::controlLoop() {
     if (is_waypoint_reached_ || waypoint_reached_count_ >= 4) {
+        RCLCPP_INFO(this->get_logger(), "All waypoints reached. Shutting down the node.");
+        rclcpp::shutdown(); // stop the node once all waypoints are reached
         return;
     }
 
