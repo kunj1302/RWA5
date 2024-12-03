@@ -1,6 +1,7 @@
 #include "waypoint_reacher.hpp"
 #include <cmath>
 
+
 // Callback when a waypoint is received
 void WaypointReacher::waypointCallback(const bot_waypoint_msgs::msg::BotWaypoint::SharedPtr msg)
 {
@@ -10,15 +11,15 @@ void WaypointReacher::waypointCallback(const bot_waypoint_msgs::msg::BotWaypoint
     RCLCPP_INFO(this->get_logger(), "Received new waypoint: x=%f, y=%f, theta=%f", msg->waypoint.x, msg->waypoint.y, msg->waypoint.theta);
 }
 
-// Callback when pose data is received (using PoseStamped)
-void WaypointReacher::poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+// Callback when odometry data is received
+void WaypointReacher::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
-    current_x_ = msg->pose.position.x;
-    current_y_ = msg->pose.position.y;
+    current_x_ = msg->pose.pose.position.x;
+    current_y_ = msg->pose.pose.position.y;
 
     // Extracting the orientation (theta) from the quaternion
-    double siny_cosp = 2.0 * (msg->pose.orientation.w * msg->pose.orientation.z + msg->pose.orientation.x * msg->pose.orientation.y);
-    double cosy_cosp = 1.0 - 2.0 * (msg->pose.orientation.y * msg->pose.orientation.y + msg->pose.orientation.z * msg->pose.orientation.z);
+    double siny_cosp = 2.0 * (msg->pose.pose.orientation.w * msg->pose.pose.orientation.z + msg->pose.pose.orientation.x * msg->pose.pose.orientation.y);
+    double cosy_cosp = 1.0 - 2.0 * (msg->pose.pose.orientation.y * msg->pose.pose.orientation.y + msg->pose.pose.orientation.z * msg->pose.pose.orientation.z);
     current_theta_ = std::atan2(siny_cosp, cosy_cosp);
 
     // Debug log for current position and orientation
@@ -35,7 +36,6 @@ void WaypointReacher::controlLoop()
 
     double error_x = current_waypoint_.waypoint.x - current_x_;
     double error_y = current_waypoint_.waypoint.y - current_y_;
-    std::cout << current_waypoint_.waypoint.x << " " << current_x_ << "\n";
 
     // Calculate distance and angle to the target waypoint
     double distance_to_waypoint = std::sqrt(error_x * error_x + error_y * error_y);
@@ -90,9 +90,8 @@ void WaypointReacher::controlLoop()
     }
 
     // Publish the velocity command to control the robot
-    // std::cout<<"Reaching?\n";
-    std::cout<<velocity_command.linear.y<<"\n";
     velocity_publisher_->publish(velocity_command);
+    std::cout<<"Possibel\n";
 
     // Debug log for current position and command
     RCLCPP_DEBUG(this->get_logger(), "Velocity command: linear_x=%f, angular_z=%f", velocity_command.linear.x, velocity_command.angular.z);
